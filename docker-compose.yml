@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:14
+    container_name: Aleprom_db
+    restart: unless-stopped
+    ports:
+    - "5432:5432"
+    volumes:
+      - ./db_data:/var/lib/postgresql/data/
+    env_file:
+      - .env.db
+    networks:
+      aleprom_network:
+
+
+volumes:
+  db_data:
+    driver: local
+networks:
+  aleprom_network:
+    external: true

@@ -14,9 +14,10 @@ bot.
 
 import logging
 import os.path
-
+from DB.tables import User, session
 import config
-from messages.messages import BotMSG
+from sqlalchemy import exc
+from messages.messages import BotMSG, ErrLogs, priority_map
 from telegram import (ReplyKeyboardMarkup, Bot)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
                           ConversationHandler)
@@ -27,7 +28,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger()
 
-ADDID, END = range(2)
+UPDATEUSER, SEVERITY, END = range(3)
 
 
 def read_file():
@@ -71,11 +72,17 @@ def validate(bot, update):
     txt = 'نام: {} \n' \
           'نام کاربری: {} \n' \
           'شماره آیدی: [{}]({}) \n'
-    bot.send_message(chat_id=config.admin_id, text=txt.format(user.first_name, user.username, user.id, user.id))
-    bot.send_message(chat_id=config.admin_id, text='{}'.format(user.id))
-    update.message.reply_text(
-        'done. you will be notified'
-    )
+    try:
+        user_obj = User(bale_id=user.id, name=user.first_name, username=user.username)
+        session.add(user_obj)
+        session.commit()
+        bot.send_message(chat_id=config.admin_id, text=txt.format(user.first_name, user.username, user.id, user.id))
+        bot.send_message(chat_id=config.admin_id, text='{}'.format(user.id))
+        update.message.reply_text("{}".format(BotMSG.get_id))
+    except exc.IntegrityError:
+        logging.info(ErrLogs.record_exist)
+        update.message.reply_text("{}".format(ErrLogs.record_exist))
+
     return ConversationHandler.END
 
 
@@ -86,21 +93,44 @@ def it_is_valid(bot, update):
         update.message.reply_text(
             'what is id?'
         )
-        return ADDID
+        return SEVERITY
 
 
-def add_id(bot, update):
-    logger.info("add_id called")
+def severity(bot, update, user_data):
+    reply_keyboard = [['INFO', 'WARNING', 'ERROR', 'CRITICAL']]
+    logger.info("severity called")
     req_id = update.message.text
-    update_file(req_id)
-    update.message.reply_text('Thank you! Done.')
-    return ConversationHandler.END
+    user_data['req_id'] = req_id
+    # update_file(req_id)
+    # user = User(bale_id=req_id,)
+    update.message.reply_text('please set the minimum severity of user to receive alerts.',
+                              reply_markup=ReplyKeyboardMarkup(keyboard=reply_keyboard))
+    return UPDATEUSER
 
 
-def end(bot, update):
-    logger.info("end called")
-    update.message.reply_text('Thank you! Done.')
-    return ConversationHandler.END
+def update_user(bot, update, user_data):
+    logger.info("update_user called")
+    severity_ = update.message.text
+    req_id = user_data['req_id']
+    user_obj = session.query(User).filter_by(bale_id=req_id).first()
+    if severity_ in ['INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+        priority = 0
+        if severity_ == 'INFO':
+            priority = 1
+        elif severity_ == 'WARNING':
+            priority = 2
+        elif severity_ == 'ERROR':
+            priority = 3
+        elif severity_ == 'CRITICAL':
+            priority = 4
+        user_obj.st_change(priority)
+        user_obj.is_valid = True
+        session.commit()
+        bot.send_message(chat_id=user_obj.bale_id, text='you will be notified for [{}]'.format(priority_map[severity_]))
+        update.message.reply_text('Thank you! it\'s Done. Selected priority is: [{}]'.format(priority_map[severity_]))
+        return ConversationHandler.END
+    else:
+        update.message.reply_text('please chose one of supported options.')
 
 
 def cancel(bot, update):
@@ -134,8 +164,8 @@ def main():
             CommandHandler('it_is_valid', it_is_valid)
         ],
         states={
-            END: [RegexHandler(pattern='^(end)$', callback=end)],
-            ADDID: [RegexHandler(pattern='\d', callback=add_id)],
+            SEVERITY: [RegexHandler(pattern='\d', callback=severity, pass_user_data=True)],
+            UPDATEUSER: [MessageHandler(Filters.text, callback=update_user, pass_user_data=True)],
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
