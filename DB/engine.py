@@ -18,7 +18,6 @@ db_string = "postgresql://{}:{}@{}:{}/{}".format(
 db = create_engine(db_string)
 
 Session = sessionmaker(db)
-session = Session()
 
 
 # class Film(base):

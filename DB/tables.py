@@ -40,6 +40,20 @@ class User(Base):
         return [self.info_st, self.warning_st, self.error_st, self.critical_st]
 
 
+class AuthUsers(Base):
+    __tablename__ = 'auth_users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True)
+    password = Column(String)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    def __repr__(self):
+        return '<%s#%s>' % (self.__class__.__name__, self.id)
+
+    def __str__(self):
+        return self.username
 
 
 Base.metadata.create_all(db)

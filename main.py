@@ -13,14 +13,17 @@ bot.
 """
 
 import logging
+import threading
 import os.path
-from DB.tables import User, session
+from DB.tables import User, Session
 import config
 from sqlalchemy import exc
 from messages.messages import BotMSG, ErrLogs, priority_map
 from telegram import (ReplyKeyboardMarkup, Bot)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
                           ConversationHandler)
+from webhook.hook import app
+
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -74,6 +77,7 @@ def validate(bot, update):
           'شماره آیدی: [{}]({}) \n'
     try:
         user_obj = User(bale_id=user.id, name=user.first_name, username=user.username)
+        session = Session()
         session.add(user_obj)
         session.commit()
         bot.send_message(chat_id=config.admin_id, text=txt.format(user.first_name, user.username, user.id, user.id))
@@ -112,6 +116,7 @@ def update_user(bot, update, user_data):
     logger.info("update_user called")
     severity_ = update.message.text
     req_id = user_data['req_id']
+    session = Session()
     user_obj = session.query(User).filter_by(bale_id=req_id).first()
     if severity_ in ['INFO', 'WARNING', 'ERROR', 'CRITICAL']:
         priority = 0
@@ -147,6 +152,8 @@ def error(bot, update):
 
 
 def main():
+    x = threading.Thread(target=app.run)
+    x.start()
     # Create the Updater and pass it your bot's token.
     bot = Bot(token=config.token,
               base_url="https://tapi.bale.ai/",
