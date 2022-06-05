@@ -1,13 +1,22 @@
 from flask import Flask, request, Response
-from flask import jsonify
+import requests
+
+import config
 from sqlalchemy.exc import IntegrityError
 from DB.engine import Session
 from flask_httpauth import HTTPBasicAuth
 from utils.encryption import enc, dec
-from DB.tables import AuthUsers
+from utils.db_func import get_pri_errors, get_chat_ids
+from DB.tables import AuthUsers, User
 
 app = Flask(__name__)
 auth = HTTPBasicAuth()
+
+
+def get_users(pri):
+    session = Session()
+    users_chatid = get_chat_ids(get_pri_errors(session, pri))
+    return users_chatid
 
 
 @app.route('/crete_user', methods=['POST'])
@@ -33,13 +42,17 @@ def create_user():
 def return_response():
     """
     curl -X POST -u my_user0:my_password localhost:5000/sendMessage -H 'Content-Type: application/json'
-    '{"chat_id": 12343, "text": "Hello World!", "severity": "Critical"}'
+    '{"text": "Hello World!", "severity": "Critical"}'
     """
     data = request.json
     severity = data['severity']
     text = data['text']
-    chat_id = data['chat_id']
-    print(severity, text, chat_id)
+
+    ids = get_users(severity)
+    print(ids)
+    for chat_id in ids:
+        data = dict(chat_id=chat_id, text=text)
+        requests.post('%sbot%s/sendMessage' % (config.base_url, config.token), data=data)
     return Response('ok', status=200)
 
 

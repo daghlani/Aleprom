@@ -9,10 +9,10 @@ class User(Base):
     bale_id = Column(Integer, unique=True)
     name = Column(String)
     username = Column(String, unique=True)
-    info_st = Column(Boolean, default=False)
-    warning_st = Column(Boolean, default=False)
-    error_st = Column(Boolean, default=False)
-    critical_st = Column(Boolean, default=False)
+    info = Column(Boolean, default=False)
+    warning = Column(Boolean, default=False)
+    error = Column(Boolean, default=False)
+    critical = Column(Boolean, default=False)
     is_valid = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -30,14 +30,14 @@ class User(Base):
 
     def st_change(self, pr):
         if pr < 2:
-            self.info_st = self.bool_ch(self.info_st)
+            self.info = self.bool_ch(self.info)
         if pr < 3:
-            self.warning_st = self.bool_ch(self.warning_st)
+            self.warning = self.bool_ch(self.warning)
         if pr < 4:
-            self.error_st = self.bool_ch(self.error_st)
+            self.error = self.bool_ch(self.error)
         if pr < 5:
-            self.critical_st = self.bool_ch(self.critical_st)
-        return [self.info_st, self.warning_st, self.error_st, self.critical_st]
+            self.critical = self.bool_ch(self.critical)
+        return [self.info, self.warning, self.error, self.critical]
 
 
 class AuthUsers(Base):

@@ -1,17 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-First, a few callback functions are defined. Then, those functions are passed to
-the Dispatcher and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-Usage:
-Example of a bot-user conversation using ConversationHandler.
-Send /start to initiate the conversation.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
-
 import logging
 import threading
 import os.path
@@ -23,7 +12,6 @@ from telegram import (ReplyKeyboardMarkup, Bot)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
                           ConversationHandler)
 from webhook.hook import app
-
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -61,14 +49,6 @@ def update_file(new_id):
     except Exception as err:
         logger.error(err)
 
-
-# def start(bot, update):
-#     reply_keyboard = [['Sign_up', 'Cancel']]
-#     logger.info("start called")
-#     update.message.reply_text(BotMSG.start_msg, reply_markup=ReplyKeyboardMarkup(keyboard=reply_keyboard))
-#     return END
-
-
 def validate(bot, update):
     logger.info("validate called")
     user = update.message.from_user
@@ -105,8 +85,6 @@ def severity(bot, update, user_data):
     logger.info("severity called")
     req_id = update.message.text
     user_data['req_id'] = req_id
-    # update_file(req_id)
-    # user = User(bale_id=req_id,)
     update.message.reply_text('please set the minimum severity of user to receive alerts.',
                               reply_markup=ReplyKeyboardMarkup(keyboard=reply_keyboard))
     return UPDATEUSER
@@ -154,10 +132,8 @@ def error(bot, update):
 def main():
     x = threading.Thread(target=app.run)
     x.start()
-    # Create the Updater and pass it your bot's token.
-    bot = Bot(token=config.token,
-              base_url="https://tapi.bale.ai/",
-              base_file_url="https://tapi.bale.ai/file/")
+    # Create the Updater and pass it your bots token.
+    bot = Bot(token=config.token,base_url=config.base_url,base_file_url=config.base_file_url)
     updater = Updater(bot=bot)
 
     # Get the dispatcher to register handlers
@@ -184,15 +160,6 @@ def main():
 
     # Start the Bot
     updater.start_polling(poll_interval=2)
-    # you can replace above line with commented below lines to use webhook instead of polling
-    # updater.bot.set_webhook(url="{}{}".format(os.getenv('WEB_HOOK_DOMAIN', "https://testwebhook.bale.ai"),
-    #                                           os.getenv('WEB_HOOK_PATH', "/get-upd")))
-    # updater.start_webhook(listen=os.getenv('WEB_HOOK_IP', ""), port=int(os.getenv('WEB_HOOK_PORT', "")),
-    #                       url_path=os.getenv('WEB_HOOK_PATH', ""))
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
