@@ -44,9 +44,22 @@ def return_response():
     curl -X POST -u my_user0:my_password localhost:5000/sendMessage -H 'Content-Type: application/json'
     '{"text": "Hello World!", "severity": "Critical"}'
     """
-    data = request.json
-    severity = data['severity']
-    text = data['text']
+    try:
+        data = request.json
+        severity = data['severity']
+        if 'flat' in data:
+            if data['flat'].lower() == 'ture':
+                text = request.data
+        else:
+            text = request.data
+            # st = text['alerts'][0]['status']
+            # desc = text['alerts'][0]['annotations']['description']
+            # target = text['commonLabels']['instance']
+            # host = text['commonLabels']['host']
+            # txt = str('status: {}\n{}'.format(st, desc))
+    except Exception as err:
+        text = request.data
+        severity = 'info'
 
     ids = get_users(severity)
     print(ids)
