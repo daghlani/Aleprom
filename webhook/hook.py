@@ -41,7 +41,7 @@ def create_user():
 @auth.login_required
 def return_response():
     """
-    curl -X POST -u my_user0:my_password localhost:5000/sendMessage -H 'Content-Type: application/json'
+    curl -X POST -u my_user0:my_password localhost:5000/sendMessage -H 'Content-Type: application/json' -d
     '{"text": "Hello World!", "severity": "Critical"}'
     """
     try:
@@ -58,13 +58,17 @@ def return_response():
             # host = text['commonLabels']['host']
             # txt = str('status: {}\n{}'.format(st, desc))
     except Exception as err:
-        text = request.data
+        print('eeeeeeeeeeeeeeeeeeeeeee', err)
+        print(request.data)
+        text = 'test'
+        # text = request.data
         severity = 'info'
 
     ids = get_users(severity)
     print(ids)
     for chat_id in ids:
         data = dict(chat_id=chat_id, text=text)
+        print('%sbot%s/sendMessage' % (config.base_url, config.token))
         requests.post('%sbot%s/sendMessage' % (config.base_url, config.token), data=data)
     return Response('ok', status=200)
 

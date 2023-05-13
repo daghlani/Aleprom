@@ -2,13 +2,13 @@ from DB.tables import User
 
 
 def get_pri_errors(session, pri):
-    if pri == 'info':
+    if pri.lower() == 'info':
         objs = session.query(User).filter_by(info=True).all()
-    if pri == 'warning':
+    if pri.lower() == 'warning':
         objs = session.query(User).filter_by(warning=True).all()
-    if pri == 'error':
+    if pri.lower() == 'error':
         objs = session.query(User).filter_by(error=True).all()
-    if pri == 'critical':
+    if pri.lower() == 'critical':
         objs = session.query(User).filter_by(critical=True).all()
     return objs
 
