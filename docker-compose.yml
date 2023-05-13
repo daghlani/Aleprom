@@ -1,4 +1,10 @@
 version: '3.8'
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+
 services:
   db:
     image: postgres:14
@@ -10,6 +16,7 @@ services:
       - ./db_data:/var/lib/postgresql/data/
     env_file:
       - .env.db
+    logging: *default-logging
     networks:
       aleprom_network:
 
@@ -20,3 +27,4 @@ volumes:
 networks:
   aleprom_network:
     external: true
+
